@@ -16,7 +16,12 @@ fi
 
 # Afficher l'historique des commandes de l'utilisateur
 echo "Historique des commandes de l'utilisateur '$USER':"
-history -u "$USER"
+USER_HISTORY_FILE="/home/$USER/.bash_history"
+if [ -f "$USER_HISTORY_FILE" ]; then
+  tail -n 20 "$USER_HISTORY_FILE"  # Affiche les 20 dernières commandes
+else
+  echo "Aucun historique trouvé pour '$USER'."
+fi
 echo ""
 
 # Afficher la dernière connexion de l'utilisateur
@@ -32,11 +37,13 @@ fi
 LAST_LOGIN_DATE=$(last -n 1 "$USER" | head -n 1 | awk '{print $4, $5, $6}')
 if [ ! -z "$LAST_LOGIN_DATE" ]; then
   # Convertir la date en format UNIX timestamp
-  LAST_LOGIN_TIMESTAMP=$(date -d "$LAST_LOGIN_DATE" +%s)
-  CURRENT_TIMESTAMP=$(date +%s)
-
-  # Calculer la différence en jours
-  DAYS_SINCE_LAST_LOGIN=$(( (CURRENT_TIMESTAMP - LAST_LOGIN_TIMESTAMP) / 86400 ))
-
-  echo "Nombre de jours écoulés depuis la dernière connexion: $DAYS_SINCE_LAST_LOGIN jours"
+  LAST_LOGIN_TIMESTAMP=$(date -d "$LAST_LOGIN_DATE" +%s 2>/dev/null)
+  if [ $? -eq 0 ]; then
+    CURRENT_TIMESTAMP=$(date +%s)
+    # Calculer la différence en jours
+    DAYS_SINCE_LAST_LOGIN=$(( (CURRENT_TIMESTAMP - LAST_LOGIN_TIMESTAMP) / 86400 ))
+    echo "Nombre de jours écoulés depuis la dernière connexion: $DAYS_SINCE_LAST_LOGIN jours"
+  else
+    echo "Impossible de convertir la date de la dernière connexion."
+  fi
 fi
